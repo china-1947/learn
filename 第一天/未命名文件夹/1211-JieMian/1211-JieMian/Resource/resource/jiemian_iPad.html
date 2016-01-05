@@ -1,0 +1,470 @@
+﻿<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="UTF-8">
+            <meta http-equiv="Cache-Control" content="no-cache" >
+                <meta id="viewport" name="viewport" content="width=device-width; initial-scale=1.0; minimum-scale=1.0; maximum-scale=1.0">
+                    <title>界面</title>
+                    <script language="javascript">
+                        var isMove = 1;
+                        var pagePos = 0;
+                        var startTime;
+                        var timer;
+                        var isScrolling = false;
+                        var isScrollingOnTouchstart = false;
+
+                        //加载相关新闻和标签新闻
+                        function loadRelatedAndTagNews(string) {
+                            var idObj = document.getElementById("recommand");
+                            idObj.innerHTML = string;
+                        }
+                    
+                        //加载ads
+                        function loadAds(adsStr) {
+                            var idObj = document.getElementById("ads");
+                            idObj.innerHTML = adsStr;
+                        }
+
+                        //文章详情页点击作者
+                        function authorClick(authorIndex) {
+                            //alert(authorIndex);
+                            authorCallback(authorIndex);
+                        }
+                    
+                        //文章详情页点击相关新闻
+                        function relatedNewsClick(relatedNewsID) {
+                            relatedNewsCallback(relatedNewsID);
+                        }
+
+                        //点击图片，跳转图集
+                        function imgOnClick(imgUrl) {
+                            jumpPhotosCollectionCallback(imgUrl);
+                        }
+
+                        //加载图片
+                        function loadnativeimage(imageID,img_article){
+                            document.getElementById(imageID).src = img_article;
+                        }
+
+                        function onScroll()
+                        {
+                            isScrolling = true;
+                            
+                            clearTimeout( timer );
+                            
+                            timer = setTimeout( function(){
+                                               isScrolling = false;
+                                               }, 50 );
+                        }
+                        
+                        document.addEventListener( 'touchmove', onScroll, false );
+                        document.addEventListener( 'scroll', onScroll, false );
+                        
+                        
+                        document.ontouchstart = function(e)
+                        {
+                            isMove = 1;
+                            isScrollingOnTouchstart = isScrolling;
+                            startTime = (new Date()).getTime();
+                            document.documentElement.style.webkitTapHighlightColor = "rgba(1,1,1,1)";/*webkit api*/
+                        };
+                        document.ontouchend = function(e)
+                        {
+                            var last = ( new Date() ).getTime() - startTime;
+                            var target = e.target;
+                            
+                            // 长按忽略
+                            if( last > 500 )
+                            {
+                                return;
+                            }
+                            
+                            // e.target returns the text node in iOS 4.3 when you click text and then e.target.tagName returns undefined.
+                            while( target.nodeType == 3 )
+                            {
+                                target = target.parentNode;
+                            }
+                            
+                            if (isMove == 1 && isScrollingOnTouchstart == false)
+                            {
+                                // 判断是否点击热门评论区域
+                                var hotComment = document.getElementById( 'hot_comment' );
+                                var containOrEqual = false;
+                                var tempEl = target;
+                                
+                                while( tempEl ) {
+                                    
+                                    if( tempEl === hotComment ) {
+                                        containOrEqual = true;
+                                        break;
+                                    }
+                                    
+                                    tempEl = tempEl.parentNode;
+                                }
+                                
+                                if( containOrEqual ) {
+                                    document.location = tempEl.id;
+                                }
+                                else if (target.tagName.toLowerCase() == "img")
+                                {
+                                    var pos = target.getBoundingClientRect();
+                                    var top = pos.top;
+                                    var left = pos.left;
+                                    var width = pos.width;
+                                    var height = pos.height;
+                                    
+                                    document.location = '?img=' + target.id + '&src=' + target.src + '&top=' + top + '&left=' + left + '&width=' + width + '&height=' + height;
+                                 
+                                }
+                                else if( (target.tagName.toLowerCase() == 'div' || target.tagName.toLowerCase() == 'dt')
+                                        && target.className == 'error')
+                                {
+                                    document.location = 'error&' + target.getElementsByTagName('img')[0].id;
+                                }
+
+                                // 直播链接
+                                else if( target.tagName.toLowerCase() == 'div' &&
+                                        target.id == 'live'){
+                                    var id = 'live';
+                                    var liveId = target.getAttribute( 'data-live-id' );
+                                    var liveType = target.getAttribute( 'data-type' );
+                                    document.location = '?id=' + id + '&liveid=' +  liveId + '&livetype=' + liveType;
+                                }
+                                // 播放视频
+                                else if( target.tagName.toLowerCase() == 'div' &&
+                                        target.className.indexOf( 'video_box_inner' ) > -1 ){
+                                    var pos = target.getBoundingClientRect();
+                                    var top = pos.top + window.pageYOffset;
+                                    var left = pos.left + window.pageXOffset;
+                                    
+                                    // 显示loading
+                                    target.parentNode.className = 'video_box video_box_loading';
+                                    
+                                    document.location = '?video=' + encodeURIComponent( target.parentNode.getAttribute( 'data-video' ) ) + '&top=' + top + '&left=' + left;
+                                }
+                                // 微博点击
+                                else if( target.tagName.toLowerCase() == 'div' &&
+                                        target.className.indexOf( 'weibo' ) > -1 )
+                                {
+                                    
+                                    var url = target.getAttribute( 'data-url' );
+                                    
+                                    document.location = '?weibo=' + encodeURIComponent( url ) ;
+                                }
+
+                                else if (target.tagName.toLowerCase() == "li")
+                                {
+                                    document.location = target.id;
+                                    var i = 0;
+                                    while( i < target.childNodes.length ) {
+                                        var node = target.childNodes[ i ];
+                                        if( node.tagName.toLowerCase() == "a" ) {
+                                            node.className = 'visited';
+                                        }
+                                        i++;
+                                    }
+
+                                }
+                                else if (target.tagName.toLowerCase() == "a")
+                                {
+                                    // 相关新闻中的A标签
+                                    if ( target.id )
+                                    {
+                                        document.location = target.id;
+                                    }
+
+                                    target.className = 'visited';
+
+                                }
+                                else
+                                {
+                                    document.location = "touched";
+                                }
+                            }
+                        };
+                        document.ontouchmove = function()
+                        {
+                            isMove = 2;
+                        }
+
+                        function changeLoadedImage(id, loadedUrl) {
+                            var img = document.getElementById(id);
+                            
+                            if (img) {
+                                img.src = loadedUrl;
+                                
+                                var target = document.getElementById("groupImageSig");
+                                if (target) { 
+                                    target.style.display = "";
+                                }
+                            }
+                        }
+                        
+                        // 恢复视频到带按钮状态
+                        function recoveryVideoBox() {
+                            var boxes = document.getElementsByClassName( 'video_box' );
+                            for (var i = boxes.length - 1; i >= 0; i--) {
+                                var box = boxes[i];
+                                box.className = 'video_box';
+                            };
+                        }
+
+
+                        </script>
+                    <style type="text/css">
+                        /*css reset*/
+                        
+                        @font-face {
+                            font-family: SourceHanSansCN-Normal;
+                            src: url('[Font]');
+                        }
+                        body,nav,dl,dt,dd,p,h1,h2,h3,h4,h5,ul,ol,li,input,button,textarea,footer{margin:0;padding:0}
+                        body{font:20px 'SourceHanSansCN-Normal'; color:#393939;background:#ececec;-webkit-text-size-adjust: none; min-width:320px;padding:60px 0px 60px}
+                        h1,h2,h3,h4,h5,h6{font-size:100%}
+                        p{margin-bottom:12px;line-height:1.5em;}
+                        p.summary{ font-size:16px; line-height:1.5em; color:#888; font-weight:normal }
+                        p.authordes{font-size:12px; line-height:1.5em; color:#888; font-weight:normal; height: 36px;
+                            overflow: hidden; }
+                        a.relate{font-size:18px;}
+                        form{display:inline}
+                        ul,ol{list-style:none}
+                        a{text-decoration:none;color:#386ab3;-webkit-tap-highlight-color: rgba(0, 0, 0, 0);}
+                        a:hover, a:active, a:focus{color:#fb8600;text-decoration: none;}
+                        a:active{color:#aaa;}
+                        img{vertical-align:middle;border:0;-ms-interpolation-mode:bicubic;}
+                        span[data-hide]{display:none}
+                        span[data-hide^="show"]{display:inline}
+                        button,input,select,textarea{font-size:100%; vertical-align:middle;outline:none;}
+                        textarea{resize:none}
+                        button,input[type="button"],input[type="reset"],input[type="submit"] {cursor:pointer;-webkit-appearance:button;-moz-appearance:button}
+                        input:focus:-moz-placeholder,input:focus::-webkit-input-placeholder {color:transparent}
+                        button::-moz-focus-inner,input::-moz-focus-inner { padding:0; border:0}
+                        table { border-collapse:collapse; border-spacing:0}
+                        
+                        .fl{float:left;}.fr{float:right;}.hide{display:none;}.show{display: block;}
+                        header, footer, article, section, nav, menu, hgroup {display: block;clear:both;}
+                        
+                        /*article*/
+                        #mina_article{clear:both; padding:0 80px; overflow: hidden; line-height: 1.5em;}
+                        .jiemian_title{clear:both;}
+                        .jiemian_ss{margin:auto 0;}
+                        .jiemian_summary{margin:auto 0px; font-size:18px; line-height: 1.5em; color:#333333; padding:6px 0 6px;font-weight:normal}
+                        
+                        h1{ font-size:28px; line-height: 1.5em; color:#1f1f1f; padding:22px 0;}
+                        h3{ font-size:23px; line-height: 1.5em; color:#333333; padding:20px 0;}
+                        h4{ font-size:22px; line-height: 1.5em;color: #333333;padding-bottom: 10px;}
+                        h5{ font-size:16px; line-height: 1.5em;  color:#333333; font-weight:normal;padding:6px 0;}
+                        
+                        .jiemian_cont{clear:both;overflow:hidden;*zoom:1; padding:20px 0; text-justify:inter-ideograph;text-align:justify; font-size:20px; line-height: 1.5em}
+                        .preface{ margin:10px 0; padding:14px 18px; font-size:14px; line-height: 1.5em; color:#888; background:#f1f1f1; font-weight:normal; overflow: hidden;}
+                        .jiemian_t_tips{}
+                        .jiemian_t{ text-indent:2em; font-size:20px; line-height: 1.5em; padding:8px 0}
+                        .jiemian_t:empty,
+                        .jiemian_t .pic_article,
+                        .jiemian_t .video_box{padding: 0 !important;}
+                        .jiemian_t + .pic_article,.jiemian_t + .video_box{padding:0 0 10px !important;}
+                        .article_con{ overflow: hidden;}
+                        .preface:empty{display: none !important; padding: 0 !!important;}
+                        .content-text-focus{background: #f1f1f1;padding: 20px;line-height: 23px;font-size: 16px;margin: 15px 0;color: #01b8ed;}
+                        .blockquote{border-left: 5px solid #00b8e8;padding: 0 10px 0 15px;font-size: 16px;margin-bottom: 20px;line-height: 24px;}
+                        
+                        /*大图和组图*/
+                        .pic_article{ clear:both; padding:14px 10px;}
+                        .pic_article .bigphoto{position: relative;overflow: hidden; width: auto; max-height:800px; margin:0 ;}
+                        .bigphoto img{ max-width:100%;min-width:100%;}
+                        .pic_article .adsphoto{position: relative;overflow: hidden; width: auto;height:auto; max-height:800px; margin:0 auto; padding:0 80px;}
+                        .pic_article .bigphoto .img_box{ width: 320px; max-width: 320px; max-height: 800px; margin:0 0 0 -20px;  background:#eaeaea url([DEFAULTIAMGEURL]) center no-repeat; background-size: 61px 44px;overflow: hidden;}
+                        .pic_article .bigphoto .error{ width: 320px; max-height: 800px; margin:0 0 0 -20px;  background:#eaeaea url([RELOADIMGNORMAL]) center no-repeat; background-size:71px 56px; overflow: hidden;}
+                        .pic_article .bigphoto .error:hover,
+                        .pic_article .bigphoto .error:active{background-image: url([RELOADIMGPRESSED]);}
+                        .pic_article .bigphoto .loading{ width: 320px; max-height: 800px; margin:-20px -20px -20px -20px; background:#eaeaea url([RELOADIMGRELOAD]) center no-repeat; background-size:71px 56px;}
+                        .pic_article .bigphoto .icon{width: 40px;height: 40px; background: url([GROUPIMAGETAG]) no-repeat; background-size: 40px 40px; position: absolute; right: 0; bottom: 0;pointer-events:none;}
+                        .pic_article img{ width:100%;border-radius:5px;}
+                        .pic_article .bigphoto .bg{ display: none; width: 100%; height: 100%;position: absolute;left: 0;; top: 0;pointer-events:none;z-index:10}
+                        .pic_article_mate{ clear:both; font-size:16px; line-height:16px; color:#888; text-align:right; padding:10px 10px 0; overflow: hidden;}
+                        
+                        
+                        /*视频*/
+                        .pic_article .video_box{position: relative;overflow: hidden; width: auto; max-height:800px; margin:0 auto;}
+                        .pic_article video{
+                            border-radius:5px;
+                        }
+                        
+                        
+                        /*特小*/
+                        .s_smallmore{}
+                        .s_smallmore h1{font-size:20px; }
+                        .s_smallmore h3{font-size:19px; }
+                        .s_smallmore h4{font-size: 18px;}
+                        .s_smallmore h5{font-size:12px;}
+                        .s_smallmore .preface{font-size:12px;}
+                        .s_smallmore .jiemian_t,
+                        .s_smallmore .jiemian_cont{ font-size:16px;}
+                        .s_smallmore .pic_article_mate,
+                        .s_smallmore .smallphoto dd{font-size:12px;}
+                        .s_smallmore .jiemian_summary{font-size:14px;}
+                        
+                        /*小*/
+                        .s_small{}
+                        .s_small h1{font-size:24px; }
+                        .s_small h3{font-size:21px; }
+                        .s_small h4{font-size: 20px;}
+                        .s_small h5{font-size:14px;}
+                        .s_small .preface{font-size:14px;}
+                        .s_small .jiemian_t,
+                        .s_small .jiemian_cont{ font-size:18px;}
+                        .s_small .pic_article_mate,
+                        .s_small .smallphoto dd{font-size:14px;}
+                        .s_small .jiemian_summary{font-size:16px;}
+                        
+                        /*中 默认*/
+                        .s_middle{}
+                        
+                        /*大*/
+                        .s_large h1{font-size:32px;}
+                        .s_large h3{font-size:27px; }
+                        .s_large h4{font-size: 26px;}
+                        .s_large h5{font-size:20px;}
+                        .s_large .preface{font-size:20px;}
+                        .s_large .jiemian_t,
+                        .s_large .jiemian_cont{ font-size:24px;}
+                        .s_large .pic_article_mate{font-size:20px; line-height:20px;}
+                        .s_large .smallphoto dd{ font-size:20px;}
+                        .s_large .jiemian_summary{font-size:22px;}
+                        
+                        /*超大*/
+                        .s_largemore h1{font-size:36px; }
+                        .s_largemore h3{font-size:32px;}
+                        .s_largemore h4{font-size: 30px;}
+                        .s_largemore h5{font-size: 24px;}
+                        .s_largemore .preface{font-size:24px;}
+                        .s_largemore .jiemian_t,
+                        .s_largemore .jiemian_cont{ font-size:28px;}
+                        .s_largemore .pic_article_mate{font-size:24px; line-height:24px;}
+                        .s_largemore .smallphoto dd{ font-size:24px;}
+                        .s_largemore .jiemian_summary{font-size:26px;}
+                        
+                        /*tag*/
+                        .h2_tag{ clear:both; font-size:16px; color:#393939;margin:10px 80px;}
+                        .h2_tag span{ display:inline-block; background:#e8e8e8; margin:0px;width:600px; height:26px;line-height:26px; padding-left:2px;}
+                        
+                        /*newsitem*/
+                        .newsitem{ clear:both;margin:10px 80px;}
+                        .newsitem li{ height:40px; line-height:40px; font-size:18px; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; color:#1f1f1f;border-top:1px solid #efefef;border-bottom:1px solid #efefef;}
+                        .newsitem li:first-of-type{border-top:0px solid #fff;}
+                        .newsitem li:last-of-type{border-bottom:0px solid #efefef;}
+                        .newsitem li a{color:#1f1f1f;font-size:18px;}
+                        .newsitem li a:hover,.newsitem li a:active,.newsitem li a:focus{color:#aaa;text-decoration: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0);}
+                        .newsitem li a:active,.newsitem li a.visited{color:#aaa; font-size:18px;}
+                        
+                        #live{color:#294e87;}
+                        
+                        /** 夜间模式 **/
+                        .night{background:#3e3e3e;color: #b7b7b7;}
+                        .night .pic_article .bigphoto .bg .adsphoto{ display: block; background-color: #000; opacity: .7;}
+                        .night .pic_article .video_box{opacity: .7;}
+                        .night .smallphoto dt .bg{ display: block; background-color: #000; opacity: .7;}
+                        .night img{opacity:0.7;}
+                        .night h1{color: #b7b7b7;}
+                        .night h3{color: #b7b7b7;}
+                        .night h4{color:#b7b7b7;}
+                        .night h5{color:#b7b7b7;}
+                        .night .jiemian_ss{background:#2e2e2e;border-top:1px solid #2e2e2e;border-bottom:1px solid #2e2e2e;}
+                        .night .jiemian_summary{color:#b7b7b7;}
+                        .night .preface{ background: #2c3233; color: #505d66; border: 1px solid #303637;}
+                        .night .pic_article_mate{color: #5d5d5d;}
+                        .night a{color: #3d5799;}
+                        .night .pic_article .bigphoto .img_box{ background-color: #5d5d5d;}
+                        .night .h2_tag{color:#b7b7b7; }
+                        .night .h2_tag span{ background:#222222;box-shadow: 0 0 0 rgba(255,255,255,1);}
+                        .night .newsitem{ border-top-color: #171a1a; border-bottom-color: #333839;}
+                        .night .newsitem li{border-top-color: #333839; border-bottom-color: #434343;}
+                        .night .newsitem li a{ color: #6d6d6d;}
+                        .night .newsitem li a:active, .night .newsitem li a.visited{color: #3d4547;}
+                        .night .comment_list dt .bg{ background-color: #000; opacity: .4; display: block;}
+                        .night .comment_list .tit,
+                        .night .comment_list .tit time{color: #505d66;}
+                        .night .comment_list .txt {color: #6d7f8c;}
+                        .night .comment_list .source{color: #505d66;}
+                        .night .comment_more { border-bottom-color: #323738;}
+                        .night .comment_more span{background: -webkit-linear-gradient(top,#222526,#1b1e1f); text-shadow: 0 1px 1px #000; color: #535d61; border-color: #1d2021;}
+                        .night .comment_more span:active,
+                        .night .comment_more span.visited{background: -webkit-linear-gradient(top,#1c1f20,#171a1a); text-shadow: 0 1px 1px #000; color: #535d61; border-color: #191b1c;}
+                        
+                    /**/
+                    .container {margin:10px 80px; width:auto; border-top: 1px solid #E3E3E3; overflow: hidden; background-color:#ececec; height:80px; padding-top:0px;}
+                    .sidecontent{overflow: hidden; margin:10px 10px; background-color: #ececec;}
+                    .sidebar { float:left; width:60px; height:60px; padding-left:10px; padding-top:0px;}
+                    .sidebar1{float:left; width:430px; padding-left:10px; padding-right:10px;padding-top:0px;}
+                    .sidebar2 { float:right; width:50px; padding-top:15px; padding-right:10px;}
+                    .sidebar img{
+                        border-radius:30px;
+                        width:60px;
+                        height:60px;
+                    }
+                    .sidebar2 img{
+                        width:auto;
+                        height:40px;
+                    }
+                    
+                    .wen1 {color: #7B7B7B; line-height: 18px; font-size:18px;font-weight:bold;}
+                    .wen2 {color: #7B7B7B; line-height: 18px; font-size:14px;padding-right:20px; }
+                    
+                    .night .container{background-color: #3e3e3e;border-top: 1px solid #434343;}
+                    .night .sidecontent{background-color: #3e3e3e;}
+                    .night .container .wen1 {color: #7B7B7B;}
+
+
+                    </style>
+                    
+                    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+                        </head>
+    <body class="[SKIN]"> <!-- 夜间模式 -->
+    <!-- 正文区 -->
+    <section>
+        <!-- 正文主体 -->
+        <article>
+        <div id="mina_article" class="[FONTSIZE]">
+            <!--正文信息-->
+            <div class="jiemian_title">
+                <h1 id="articleTitle">[NEWSTITLE]</h1>
+            </div>
+        </div>
+        <div id="mina_article" class="[FONTSIZE]">
+            <!--正文信息-->
+            [NESSUMMARY]
+        </div>
+        <div id="mina_article" class="[FONTSIZE]">
+            <!--正文信息-->
+            <div class="jiemian_title">
+                <h5 id="articleDateAndSource">[NEWSSOURCE]  [NEWSTIME]</h5>
+            </div>
+        </div>
+        <div id="mina_article" class="[FONTSIZE]">
+            <!--正文信息-->
+            [HEADERIMAGE]
+        </div>
+        <div id="mina_article" class="[FONTSIZE]">
+            <!--正文内容-->
+            <div id="articleContent" class="jiemian_cont">
+                [NEWSCONTENTS]
+            </div>
+        </div>
+        </article>
+        
+        <!--作者-->
+        <article id="author">
+            [NEWSAUTHOR]
+        </article>
+        <!--相关广告-->
+        <article id="ads">
+            
+        </article>
+        <!--相关新闻-->
+        <article id="recommand">
+            
+        </article>
+
+    </section>
+    </body>
+</html>

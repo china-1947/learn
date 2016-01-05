@@ -1,0 +1,65 @@
+//
+//  PrefixHeader.pch
+//  1211-JieMian
+//
+//  Created by 千锋 on 15/12/11.
+//  Copyright (c) 2015年 千锋. All rights reserved.
+//
+
+#ifndef _211_JieMian_PrefixHeader_pch
+#define _211_JieMian_PrefixHeader_pch
+
+// Include any system framework and library headers here that should be included in all compilation units.
+// You will also need to set the Prefix Header build setting of one or more of your targets to reference this file.
+
+
+
+#define SCREEN_SIZE [UIScreen mainScreen].bounds.size
+
+
+#pragma mark --HomeViewController
+
+//主题栏目宽度
+#define TITLE_BUTTON_WIDTH 60
+//标题滚动视图tag
+#define TITLE_SCROLL_VIEW_TAG 1001
+//标题按钮开始tag
+#define TITLE_BUTTON_BEGIN_TAG 300
+//内容表格容器
+#define TABLE_CONTAINER_TAG 1000
+//内容表格tag值
+#define TABLE_BEGIN_TAG 400
+//状态栏.height + 导航栏.height + titleScroll.height = 94
+#define HEADER_HEIGHT 64
+
+#pragma mark --LeftViewController
+
+#define CONTAINER_LEFT_VC_WIDTH SCREEN_SIZE.width*0.75
+
+/**
+ *  各种API
+ */
+
+#pragma mark --各种API
+//左侧菜单
+#define API_LEFT_MENU_URL @"http://appapi.jiemian.com/cate/left_menu.json"
+//下方分类滚动视图按钮
+#define API_CATEGORY_URL @"http://appapi.jiemian.com/cate/all.json"
+//首页数据请求地址
+#define API_INDEX_NEWS_URL @"http://appapi.jiemian.com/cate/main.json?page=1"
+
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
