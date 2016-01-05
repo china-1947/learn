@@ -1,0 +1,3 @@
+t告诉我们当前没有需要提交的修改，
+而且，工作目录是干净
+（working directory cleaiin）的i。
